@@ -1119,7 +1119,7 @@
             }
             return dispatcher;
           }
-          function useContext2(Context) {
+          function useContext3(Context) {
             var dispatcher = resolveDispatcher();
             {
               if (Context._context !== void 0) {
@@ -1133,7 +1133,7 @@
             }
             return dispatcher.useContext(Context);
           }
-          function useState(initialState) {
+          function useState2(initialState) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useState(initialState);
           }
@@ -1145,7 +1145,7 @@
             var dispatcher = resolveDispatcher();
             return dispatcher.useRef(initialValue);
           }
-          function useEffect(create, deps) {
+          function useEffect2(create, deps) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useEffect(create, deps);
           }
@@ -1161,7 +1161,7 @@
             var dispatcher = resolveDispatcher();
             return dispatcher.useCallback(callback, deps);
           }
-          function useMemo2(create, deps) {
+          function useMemo3(create, deps) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useMemo(create, deps);
           }
@@ -1924,18 +1924,18 @@
           exports.startTransition = startTransition;
           exports.unstable_act = act;
           exports.useCallback = useCallback;
-          exports.useContext = useContext2;
+          exports.useContext = useContext3;
           exports.useDebugValue = useDebugValue;
           exports.useDeferredValue = useDeferredValue;
-          exports.useEffect = useEffect;
+          exports.useEffect = useEffect2;
           exports.useId = useId;
           exports.useImperativeHandle = useImperativeHandle;
           exports.useInsertionEffect = useInsertionEffect;
           exports.useLayoutEffect = useLayoutEffect;
-          exports.useMemo = useMemo2;
+          exports.useMemo = useMemo3;
           exports.useReducer = useReducer;
           exports.useRef = useRef2;
-          exports.useState = useState;
+          exports.useState = useState2;
           exports.useSyncExternalStore = useSyncExternalStore;
           exports.useTransition = useTransition;
           exports.version = ReactVersion;
@@ -19121,8 +19121,8 @@
   // node_modules/@shopify/ui-extensions/build/esm/surfaces/customer-account/extension.mjs
   var extension = createExtensionRegistrationFunction();
 
-  // node_modules/@shopify/ui-extensions/build/esm/surfaces/checkout/components/Text/Text.mjs
-  var Text = createRemoteComponent("Text");
+  // node_modules/@shopify/ui-extensions/build/esm/surfaces/checkout/components/Link/Link.mjs
+  var Link = createRemoteComponent("Link");
 
   // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/customer-account/render.mjs
   var import_react6 = __toESM(require_react(), 1);
@@ -19452,18 +19452,130 @@ ${errorInfo.componentStack}`);
     }
   };
 
-  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/components/Text/Text.mjs
-  var Text2 = createRemoteReactComponent(Text);
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/components/Link/Link.mjs
+  var Link2 = createRemoteReactComponent(Link, {
+    fragmentProps: ["overlay"]
+  });
 
-  // extensions/product-manual-ui/src/OrderIndexExtension.jsx
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/customer-account/hooks/api.mjs
+  var import_react9 = __toESM(require_react(), 1);
+
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/customer-account/errors.mjs
+  var CustomerAccountUIExtensionError = class extends Error {
+    constructor(...args) {
+      super(...args);
+      this.name = "CustomerAccountUIExtensionError";
+    }
+  };
+  var ExtensionHasNoFieldError = class extends Error {
+    constructor(field, target) {
+      super(`Cannot access '${field}' on target '${target}'. The corresponding property was not found on the API.`);
+      this.name = "ExtensionHasNoFieldrror";
+    }
+  };
+
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/customer-account/hooks/api.mjs
+  function useApi() {
+    const api = (0, import_react9.useContext)(ExtensionApiContext);
+    if (api == null) {
+      throw new CustomerAccountUIExtensionError("You can only call this hook when running as a UI extension.");
+    }
+    return api;
+  }
+
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/customer-account/hooks/subscription.mjs
+  var import_react10 = __toESM(require_react(), 1);
+  function useSubscription(subscription) {
+    const [, setValue] = (0, import_react10.useState)(subscription.current);
+    (0, import_react10.useEffect)(() => {
+      let didUnsubscribe = false;
+      const checkForUpdates = (newValue) => {
+        if (didUnsubscribe) {
+          return;
+        }
+        setValue(newValue);
+      };
+      const unsubscribe = subscription.subscribe(checkForUpdates);
+      checkForUpdates(subscription.current);
+      return () => {
+        didUnsubscribe = true;
+        unsubscribe();
+      };
+    }, [subscription]);
+    return subscription.current;
+  }
+
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/customer-account/hooks/target.mjs
+  var ExtensionHasNoTargetError = class extends Error {
+    constructor(target) {
+      super(`Cannot call 'useTarget()' on target '${target}'. Property 'target' is not found on api.`);
+      this.name = "ExtensionHasNoTargetError";
+    }
+  };
+  function useTarget() {
+    const api = useApi();
+    if (!api.target) {
+      throw new ExtensionHasNoTargetError(api.extension.target);
+    }
+    return useSubscription(api.target);
+  }
+
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/customer-account/hooks/app-metafields.mjs
+  var import_react11 = __toESM(require_react(), 1);
+  function useAppMetafields(filters = {}) {
+    const api = useApi();
+    const extensionTarget = api.extension.target;
+    if (!("appMetafields" in api)) {
+      throw new ExtensionHasNoFieldError("appMetafields", extensionTarget);
+    }
+    const appMetafields = useSubscription(api.appMetafields);
+    return (0, import_react11.useMemo)(() => {
+      if (filters.key && !filters.namespace) {
+        throw new CustomerAccountUIExtensionError("You must pass in a namespace with a key");
+      }
+      const filterKeys = Object.keys(filters);
+      if (filterKeys.length) {
+        return appMetafields.filter((app) => {
+          return filterKeys.every((key) => {
+            if (key === "id" || key === "type") {
+              return app.target[key] === filters[key];
+            }
+            return app.metafield[key] === filters[key];
+          });
+        });
+      }
+      return appMetafields;
+    }, [filters, appMetafields]);
+  }
+
+  // extensions/product-manual-ui/src/LineItemExtension.jsx
   var import_jsx_runtime4 = __toESM(require_jsx_runtime());
-  var OrderIndexExtension_default = reactExtension(
-    "customer-account.order-index.block.render",
-    () => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Extension, {})
+  var LineItemExtension_default = reactExtension(
+    "customer-account.order-status.cart-line-item.render-after",
+    () => /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(LineItemExtension, {})
   );
-  function Extension() {
-    console.log("I am a block extension that renders in the Orders section");
-    return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Text2, { children: "I am a block extension that renders in the Orders section" });
+  function LineItemExtension() {
+    var _a;
+    const {
+      merchandise: { product }
+    } = useTarget();
+    const product_id = product.id.replace("gid://shopify/Product/", "");
+    const pdf = useAppMetafields({
+      type: "product",
+      namespace: "custom",
+      key: "pdf"
+    });
+    console.log("pdf", pdf);
+    var _pdfstr = "";
+    for (const item of pdf) {
+      if (item.target.id === product_id) {
+        _pdfstr = (_a = item.metafield) == null ? void 0 : _a.value;
+        console.log("pdfstr of ", product_id, _pdfstr);
+        break;
+      }
+    }
+    const pdfstr = _pdfstr.slice(2, -2);
+    return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(Link2, { to: pdfstr, external: true, children: "CLICK HERE FOR INSTRUCTION" });
   }
 })();
 //# sourceMappingURL=product-manual-ui.js.map

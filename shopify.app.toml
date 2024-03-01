@@ -2,7 +2,7 @@
 
 client_id = "95f85f0e425dd7768fec4225011aa715"
 name = "product-manual"
-application_url = "https://connectors-controller-lovely-bulk.trycloudflare.com"
+application_url = "https://girlfriend-deadly-emissions-tent.trycloudflare.com"
 embedded = true
 
 [build]
@@ -12,13 +12,13 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = "write_orders,write_products"
 
 [auth]
 redirect_urls = [
-  "https://connectors-controller-lovely-bulk.trycloudflare.com/auth/callback",
-  "https://connectors-controller-lovely-bulk.trycloudflare.com/auth/shopify/callback",
-  "https://connectors-controller-lovely-bulk.trycloudflare.com/api/auth/callback"
+  "https://girlfriend-deadly-emissions-tent.trycloudflare.com/auth/callback",
+  "https://girlfriend-deadly-emissions-tent.trycloudflare.com/auth/shopify/callback",
+  "https://girlfriend-deadly-emissions-tent.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
